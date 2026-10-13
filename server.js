@@ -11,12 +11,18 @@ app.use(session({
     name:"sid",
     resave : false,
     saveUninitialized : false,
-    
     secret:"this_is_my_secret_code",
     cookie:{
         maxAge:1000*30
     }
 }))
+
+function requireAuth(req,res,next){
+    if(!req.session.username){
+        return res.redirect("/login")
+    }
+    next()
+}
 
 
 
@@ -52,14 +58,22 @@ app.post("/login",(req,res)=>{
     res.redirect("/login")
 })
 
-app.get("/home",(req,res)=>{
+app.get("/home",requireAuth,(req,res)=>{
     res.send(`
         <h1>Welcome user</h1>
         <a href="/logout">Logout</a>
         `)
 })
 
-
+app.get("/logout",(req,res)=>{
+    req.session.destroy((err)=>{
+        if(err){
+            console.log(err)
+        }
+        res.clearCookie("sid")
+        res.redirect("/login")
+    })
+})
 
 
 app.listen("3047",()=>{
